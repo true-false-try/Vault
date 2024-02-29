@@ -1,35 +1,26 @@
 package org.vault.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.vault.core.VaultTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.vault.config.VaultConfig;
-
-import java.util.Objects;
+import org.vault.util.BuildUrlPath;
 
 @RestController
 @RequestMapping("/vault")
 @RequiredArgsConstructor
 public class VaultController {
 
-    private final VaultConfig vaultConfig;
-
     @GetMapping("/getMongoConfig")
     @ResponseBody
-    public ResponseEntity<String> getMongoConfig() {
-        String url = "http://0.0.0.0:8200/v1/database/mongodb";
+    public ResponseEntity<String> getMongoConfig(@RequestParam(name = "token-mongo") String tokenMongo,
+                                                 @RequestParam(name = "path-mongo") String pathMongo) {
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Vault-Token", "s.UC4iVrBRUGfzwafz5zmlYjiP");
+        headers.add("X-Vault-Token", tokenMongo);
 
-        ResponseEntity<String> responseEntity = makeRequest(url, HttpMethod.GET, headers, String.class);
+        ResponseEntity<String> responseEntity = makeRequest(BuildUrlPath.buildUrl(pathMongo), HttpMethod.GET, headers, String.class);
 
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(responseEntity.getBody());
@@ -49,6 +40,7 @@ public class VaultController {
 
         return new ResponseEntity<>(responseEntity.getBody(), responseEntity.getHeaders(), responseEntity.getStatusCode());
     }
+
 
 }
 
