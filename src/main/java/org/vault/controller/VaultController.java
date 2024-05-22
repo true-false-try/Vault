@@ -1,16 +1,21 @@
 package org.vault.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.vault.exception.KeyValueReaderException;
+import org.vault.service.VaultKeyService;
 import org.vault.util.BuildUrlPath;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/vault")
 @RequiredArgsConstructor
 public class VaultController {
+
+    private final VaultKeyService vaultKeyService;
 
     @GetMapping("/getMongoConfig")
     @ResponseBody
@@ -28,6 +33,13 @@ public class VaultController {
             return ResponseEntity.status(responseEntity.getStatusCode()).body("Error fetching MongoDB configuration from Vault");
         }
     }
+
+    @GetMapping("/getKey")
+    @ResponseBody
+    public String getVaultKey() throws KeyValueReaderException, IOException {
+      return vaultKeyService.getKey();
+    }
+
 
     private <T> ResponseEntity<T> makeRequest(String url, HttpMethod method, HttpHeaders headers, Class<T> responseType) {
         RestTemplate restTemplate = new RestTemplate();
