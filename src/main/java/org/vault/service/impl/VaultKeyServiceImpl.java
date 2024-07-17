@@ -15,7 +15,7 @@ public class VaultKeyServiceImpl implements VaultKeyService {
     public String getKey() {
         String key;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("/vault/keys/root-token"));
+            BufferedReader reader = new BufferedReader(new FileReader("/home/yevh/Desktop/DemoProject/MentalBot/Vault/src/main/resources/vault/keys/root-token"));
             key = reader.readLine();
             log.info("The key got success : " + key);
 

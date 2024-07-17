@@ -5,21 +5,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 @Component
 @NoArgsConstructor
 public class BuildUrlPath {
-    private static String vaultAddr;
-    private static final String VAULT_VERSION_V1 = "/v1";
-
+    private static String vaultAddress;
+    private static  String vaultVersion;
     @Autowired
-    public BuildUrlPath(@Value("${vault.addr}") String vaultAddr) {
-        BuildUrlPath.vaultAddr = vaultAddr;
-        if (vaultAddr == null) {
+    public BuildUrlPath(@Value("${vault.addr}") String vaultAddress, @Value("${vault.version}") String vaultVersion) {
+        BuildUrlPath.vaultAddress = vaultAddress;
+        BuildUrlPath.vaultVersion = vaultVersion;
+        if (vaultAddress == null) {
             throw new IllegalStateException("vaultAddr is null");
         }
     }
 
     public static String buildUrl(String path) {
-        return vaultAddr.concat(VAULT_VERSION_V1).concat(path);
+        return vaultAddress.concat(vaultVersion).concat(path);
     }
 }
