@@ -31,8 +31,17 @@ public class VaultCallRedisApiServiceImpl implements VaultCallRedisApiService {
         return restTemplateConfig.defaultRestTemplate().exchange(buildUrlToMongoConfig(pathMongo), HttpMethod.GET, httpEntity, String.class);
     }
 
+    @Override
+    public ResponseEntity<String> getBotFatherConfig(String pathBotFather) {
+        log.info("into getBotFatherConfig with pathTo : {}",pathBotFather);
+        return restTemplateConfig.defaultRestTemplate().exchange(buildUrlToMongoConfig(pathBotFather), HttpMethod.GET, httpEntity, String.class);
+
+    }
+
     private String buildUrlToMongoConfig(String path) {
-        return restTemplateConfig.getVaultAddressWithVersion().concat(path);
+        String newPath = restTemplateConfig.getVaultAddressWithVersion().concat(path);
+        log.info(newPath);
+        return newPath;
     }
 
 }

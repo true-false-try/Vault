@@ -20,10 +20,16 @@ public class VaultController {
         return vaultCallRedisApiService.getMongoConfig(pathMongo);
     }
 
-    @GetMapping("getKey")
+    @GetMapping("getVaultKeys")
     @ResponseBody
     public ResponseEntity<VaultAuthDto> getVaultKey() {
       return vaultCallRedisApiService.getVaultKey();
+    }
+
+    @GetMapping("getBotFatherCredentials")
+    @ResponseBody
+    public ResponseEntity<String> getBotFatherCredentials(@RequestParam(name = "path-bot-father") String pathBotFather) {
+        return vaultCallRedisApiService.getBotFatherConfig(pathBotFather);
     }
 }
 
