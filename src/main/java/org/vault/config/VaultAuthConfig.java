@@ -19,6 +19,10 @@ import java.util.Map;
 @Getter
 @Configuration
 public class VaultAuthConfig extends AbstractVaultConfiguration {
+
+    @Value("${vault.addr.with.version}")
+    private String vaultAddressWithVersion;
+
     @Value("${vault.key-1.path}")
     private String keyOnePath;
 
@@ -47,11 +51,7 @@ public class VaultAuthConfig extends AbstractVaultConfiguration {
         return new TokenAuthentication(rootToken);
     }
 
-    @Bean
-    RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
-    @Bean
+    /*@Bean
     public void unsealVault() {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -83,10 +83,8 @@ public class VaultAuthConfig extends AbstractVaultConfiguration {
             throw new RuntimeException("Failed to read file: " + path, e);
         }
     }
-
+    // immutable class with private  final field key
     @Getter
     @RequiredArgsConstructor
-    private static class UnsealRequest {
-        private final String key;
-    }
+    private record UnsealRequest(String key){}*/
 }
