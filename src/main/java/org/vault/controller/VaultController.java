@@ -5,18 +5,17 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.vault.config.VaultAuthConfig;
-import org.vault.exception.KeyValueReaderException;
-import org.vault.service.VaultKeyService;
+import org.vault.dto.VaultAuthDto;
 import org.vault.util.BuildUrlPath;
 
-import java.io.IOException;
+import static org.vault.constant.EndpointsConstant.GET_VAULT_AUTH;
 
 @RestController
 @RequestMapping("api/vault")
 @RequiredArgsConstructor
 public class VaultController {
 
-    private final VaultKeyService vaultKeyService;
+    private final RestTemplate restTemplate;
     private final VaultAuthConfig vaultAuthConfig;
 
     @GetMapping("getMongoConfig")
@@ -37,8 +36,8 @@ public class VaultController {
 
     @GetMapping("getKey")
     @ResponseBody
-    public String getVaultKey() throws KeyValueReaderException, IOException {
-      return vaultKeyService.getKey();
+    public ResponseEntity<VaultAuthDto> getVaultKey() {
+      return restTemplate.getForEntity(GET_VAULT_AUTH.getPath(), VaultAuthDto.class);
     }
 
 

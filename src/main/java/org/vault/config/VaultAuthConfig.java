@@ -48,6 +48,10 @@ public class VaultAuthConfig extends AbstractVaultConfiguration {
     }
 
     @Bean
+    RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+    @Bean
     public void unsealVault() {
         RestTemplate restTemplate = new RestTemplate();
 
