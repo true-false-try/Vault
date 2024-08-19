@@ -52,8 +52,6 @@ public class VaultAuthConfig extends AbstractVaultConfiguration {
     private String keyThree;
     private String rootToken;
 
-    private final static String VAULT_TOKEN_NAME = "X-Vault-Token";
-
     @Override
     public VaultEndpoint vaultEndpoint() {
         return VaultEndpoint.from(URI.create(uri));
@@ -89,14 +87,5 @@ public class VaultAuthConfig extends AbstractVaultConfiguration {
         String url = "http://localhost:8099/api/redis/getVaultAuth";
         return restTemplate.getForObject(url, RedisResponseDto.class);
     }
-
-
-    @Bean
-    public HttpEntity httpEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(VAULT_TOKEN_NAME, getRootToken());
-        return new HttpEntity(headers);
-    }
-
 
 }
