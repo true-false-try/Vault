@@ -1,5 +1,5 @@
 #VAULT ----------------------------------------------------------------------------------------------
-version: '1.0'
+version: '3.8'
 services:
   vault-app:
     container_name: vault-app
@@ -9,6 +9,9 @@ services:
       - "8095:8095"
     depends_on:
       - vault
+    networks:
+      - vault-network
+
 
   vault:
     image: vault:1.6.1
@@ -20,6 +23,8 @@ services:
       - 8200:8200
     volumes:
       - ./vault/config/config.hcl:/vault/config/config.hcl
+    networks:
+      - vault-network
 
   vault-init:
     image: vault:1.6.1
@@ -31,6 +36,10 @@ services:
       - ./vault/keys:/vault/keys
     environment:
       VAULT_ADDR: $${vault.addr}
-
       VAULT_DEV_ROOT_TOKEN_ID: root
     command: [ "sh", "-c", "/vault/scripts/init-vault.sh" ]
+    networks:
+      - vault-network
+networks:
+  vault-network:
+   driver: bridge

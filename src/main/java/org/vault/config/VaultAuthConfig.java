@@ -1,90 +1,102 @@
 package org.vault.config;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.client.RestTemplateBuilder;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.config.AbstractVaultConfiguration;
 import org.springframework.web.client.RestTemplate;
+import org.vault.dto.RedisResponseDto;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Map;
+import javax.annotation.PostConstruct;
+import java.net.URI;
+
 @Slf4j
 @Getter
 @Configuration
+@NoArgsConstructor
+@AllArgsConstructor
 public class VaultAuthConfig extends AbstractVaultConfiguration {
 
-    @Value("${vault.addr.with.version}")
+    @Autowired
+    @Qualifier(value = "redisRestTemplate")
+    private RestTemplate restTemplate;
+
+    @Value("${vault.version}")
     private String vaultAddressWithVersion;
 
-    @Value("${vault.key-1.path}")
-    private String keyOnePath;
-
-    @Value("${vault.key-2.path}")
-    private String keyTwoPath;
-
-    @Value("${vault.root-token}")
-    private String rootToken;
+    @Value("${vault.addr}")
+    private String uri;
 
     @Value("${vault.unseal}")
     private String unsealUrl;
-
     @Value("${vault.host}")
     private String host;
-
     @Value("${vault.port}")
     private Integer port;
 
+    private String keyOne;
+    private String keyTwo;
+    private String keyThree;
+    private String rootToken;
+
+    private final static String VAULT_TOKEN_NAME = "X-Vault-Token";
+
     @Override
     public VaultEndpoint vaultEndpoint() {
-        return VaultEndpoint.create(host, port);
+        return VaultEndpoint.from(URI.create(uri));
+    }
+
+    @PostConstruct
+    public void initializeVaultAuthentication() {
+        RedisResponseDto redisResponseDto = callRedis();
+        if (redisResponseDto != null) {
+            rootToken = redisResponseDto.getRootToken();
+            log.info("Vault root token retrieved from Redis API");
+
+            keyOne = redisResponseDto.getUnseals().getKeyOne();
+            keyTwo = redisResponseDto.getUnseals().getKeyTwo();
+            keyThree = redisResponseDto.getUnseals().getKeyThree();
+
+            // Initialize the Vault authentication using the root token
+            clientAuthentication();
+        } else {
+            throw new RuntimeException("Failed to fetch keys and root token from Redis API");
+        }
     }
 
     @Override
     public ClientAuthentication clientAuthentication() {
+        if (rootToken == null) {
+            throw new IllegalStateException("Root token is not set. Ensure Redis has been called first.");
+        }
         return new TokenAuthentication(rootToken);
     }
 
-    /*@Bean
-    public void unsealVault() {
-        RestTemplate restTemplate = new RestTemplate();
-
-        try {
-            String keyOne = readUnseal(keyOnePath);
-            String keyTwo = readUnseal(keyTwoPath);
-
-            Map<String, Object> response1 = restTemplate.postForObject(unsealUrl, new UnsealRequest(keyOne), Map.class);
-            log.info("{} {}",getClass().getName(), response1);
-
-            Map<String, Object> response2 = restTemplate.postForObject(unsealUrl, new UnsealRequest(keyTwo), Map.class);
-            log.info("{} {}",getClass().getName(), response2);
-
-            if (response2 != null && response2.containsKey("sealed") && !(Boolean) response2.get("sealed")) {
-                System.out.println("Vault is unsealed successfully.");
-            } else {
-                throw new RuntimeException("Failed to unseal Vault. Response: " + response2);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error unsealing Vault", e);
-        }
+    public RedisResponseDto callRedis() {
+        String url = "http://localhost:8099/api/redis/getVaultAuth";
+        return restTemplate.getForObject(url, RedisResponseDto.class);
     }
 
-    private String readUnseal(String path) {
-        try {
-            return new String(Files.readAllBytes(Paths.get(path)));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read file: " + path, e);
-        }
+
+    @Bean
+    public HttpEntity httpEntity() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(VAULT_TOKEN_NAME, getRootToken());
+        return new HttpEntity(headers);
     }
-    // immutable class with private  final field key
-    @Getter
-    @RequiredArgsConstructor
-    private record UnsealRequest(String key){}*/
+
+
 }

@@ -10,5 +10,4 @@ import java.util.Map;
 public class VaultAuthDto {
     private Map<String, String> unseals;
     private String rootToken;
-
 }
