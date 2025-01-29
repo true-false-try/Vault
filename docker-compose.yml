@@ -9,37 +9,36 @@ services:
       - "8095:8095"
     depends_on:
       - vault
-    networks:
-      - vault-network
-
 
   vault:
-    image: vault:1.6.1
+    image: hashicorp/vault:1.11.0
     container_name: vault
-    command: ["sh", "-c", "vault server -config /vault/config/config.hcl"]
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_LOCAL_CONFIG: '{"storage": {"file": {"path": "/vault/file"}}, "listener": [{"tcp": { "address": "0.0.0.0:8200", "tls_disable": true}}], "default_lease_ttl": "168h", "max_lease_ttl": "720h", "ui": true}'
     cap_add:
       - IPC_LOCK
-    ports:
-      - 8200:8200
-    volumes:
-      - ./vault/config/config.hcl:/vault/config/config.hcl
-    networks:
-      - vault-network
+    command: vault server -dev -dev-root-token-id=root
 
   vault-init:
-    image: vault:1.6.1
-    container_name: vault-init
-    depends_on:
-      - vault
-    volumes:
-      - ./vault/scripts/init-vault.sh:/vault/scripts/init-vault.sh
-      - ./vault/keys:/vault/keys
-    environment:
-      VAULT_ADDR: $${vault.addr}
-      VAULT_DEV_ROOT_TOKEN_ID: root
-    command: [ "sh", "-c", "/vault/scripts/init-vault.sh" ]
-    networks:
-      - vault-network
-networks:
-  vault-network:
-   driver: bridge
+      image: hashicorp/vault:1.11.0
+      depends_on:
+        - vault
+      environment:
+        VAULT_ADDR: http://127.0.0.1:8200
+      entrypoint: >
+        /bin/sh -c "
+        export VAULT_ADDR='http://127.0.0.1:8200';
+        sleep 5;  
+        vault operator unseal zSmXi4aY8hWvWn6Ljkg6eJgS/DQVHd0kfemk95SyH/Y=;
+        vault login root;
+        vault secrets enable -path=secret kv-v2;
+        vault kv put secret/myconfig username=admin password=secret123;
+        "
+
+
+volumes:
+  vault_data: {
+  }
